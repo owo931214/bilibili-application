@@ -2,8 +2,8 @@ import json
 import threading
 import time
 import zlib
-import brotli
 
+import brotli
 import websocket
 
 
@@ -12,20 +12,21 @@ def heartbeating(self):
         heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
         self.send(heart)
         print(">>----Heartbeat----")
-        time.sleep(50)
+        time.sleep(30)
+
 
 def load_msg(message):
     base = 0
     end = len(message)
     datas = []
     while True:
-        body_len = (message[base] << 24) + (message[base + 1] << 16) + (message[base + 2] << 8) + message[
-            base + 3] - 16
+        body_len = (message[base] << 24) + (message[base + 1] << 16) + (message[base + 2] << 8) + message[base + 3] - 16
         datas.append(json.loads(message[base + 16: base + 16 + body_len]))
         base = base + 16 + body_len
         if base == end:
             break
     return datas
+
 
 def on_open(self):
     join_data = {
@@ -44,31 +45,26 @@ def on_open(self):
 def on_message(self, message):
     pt = message[7]
     op = message[11]
+    print(f"<<----Protocol code: {pt}----")
     match pt:
-        case 1:
-            print("<<----Protocol code: 1----")
+        case 0, 1:
             match op:
                 case 3:
                     print("Get heartbeat response")
                 case 8:
                     print(f"Successfully entered the room | Received message: {json.loads(message[16:])}")
                 case _:
-                    print("Could not process message{json.loads(message[16:])}")
+                    print(f"Could not process message: {json.loads(message[16:])}")
         case 2:
             message = zlib.decompress(message[16:])
             datas = load_msg(message)
-            print("<<----Protocol code: 2----")
             for data in datas:
                 print(f"Opcode: {op} | Received message: {data}")
         case 3:
             message = brotli.decompress(message[16:])
             datas = load_msg(message)
-            print("<<----Protocol code: 3----")
             for data in datas:
                 print(f"Opcode: {op} | Received message: {data}")
-        case _:
-            print(f"<<----Protocol code: {pt}----")
-            print(f"Could not process message\n{message[16:]}")
 
 
 def on_error(self, error):
@@ -81,7 +77,7 @@ def on_close(self, *args):
 
 if __name__ == "__main__":
     time_start = time.time()
-    wsapp = websocket.WebSocketApp("wss://broadcastlv.chat.bilibili.com/sub", on_open=on_open,
-                                   on_message=on_message, on_error=on_error, on_close=on_close)
+    wsapp = websocket.WebSocketApp("wss://broadcastlv.chat.bilibili.com/sub", on_open=on_open, on_message=on_message,
+                                   on_error=on_error, on_close=on_close)
     wsapp.run_forever()
     print(time.time() - time_start)

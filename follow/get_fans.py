@@ -2,6 +2,7 @@ import json
 import random
 import threading
 import time
+import sqlite3
 
 import requests
 
@@ -11,8 +12,17 @@ user_cookie = {
     "bili_jct": "d1d292f68baeed574696f09d40cc0d43"
 }
 
+db_path = '../database/bilibili_fans.db'
+db_conn = sqlite3.connect(db_path)
+db_cursor = db_conn.cursor()
 
-def check_status(targets, cookies):
+def check_db():
+    db_cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS change
+        (type varchar, name varchar, uid int, time varchar, `room id` int);
+        """)
+
+def check_fans_status(targets, cookies):
     data = {}
     for target in targets:
         result = requests.get(url=f"https://api.bilibili.com/x/space/acc/relation?mid={str(target)}", cookies=cookies)
@@ -29,10 +39,11 @@ def check_status(targets, cookies):
 
 def keep_running(target, cookie):
     while True:
-        threading.Thread(target=check_status, args=(target, cookie,))
+        threading.Thread(target=check_fans_status, args=(target, cookie,))
 
 
 if __name__ == "__main__":
-    result = check_status(targets=[128912828, 35798955, 4141795, 484819462], cookies=user_cookie)
+    result = check_fans_status(targets=[128912828, 35798955, 4141795, 484819462], cookies=user_cookie)
     for _ in result:
         print(result[_], "\n")
+

@@ -5,7 +5,7 @@ import time
 import zlib
 import requests
 from datetime import datetime
-
+from base import *
 import brotli
 import websocket
 
@@ -17,25 +17,13 @@ heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
 
 global_attr = {}
 
-def uid2roomid(uid):
-    return json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={'user-agent': 'Mozilla/5.0'}).content)['data']['live_room']['roomid']
 
-def roomid2uid(room_id):
-    return json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}').content)['data']['uid']
-
-def uid2uname(uid):
-    return json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={'user-agent': 'Mozilla/5.0'}).content)['data']['name']
-
-def get_people_count(uid):
-    print(json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_info?room_id={uid2roomid(uid)}').content)['data'])
-    print(json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids?uids[]={uid}').content)['data'])
-    return json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids?uids[]={uid}').content)['data']
 
 
 def check_db():
     db_cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS danmu
-        (msg varchar, name varchar, uid int, is_admin bit, time varchar, `room id` int);
+        (message varchar, name varchar, uid int, is_admin bit, time varchar, `room id` int);
         """)
 
 
@@ -60,7 +48,6 @@ class LiveSocket(websocket.WebSocketApp):
         super(LiveSocket, self).__init__("wss://broadcastlv.chat.bilibili.com/sub", on_open=self.on_open,
                                          on_message=self.on_message, on_error=self.on_error, on_close=self.on_close)
         self.thread = threading.Thread(target=heartbeating, args=(self,))
-        self._keep = True
         self.run_forever()
 
     def on_open(self, ws):
@@ -72,7 +59,6 @@ class LiveSocket(websocket.WebSocketApp):
         header = bytes([0, 0, 0, 16 + len(body), 0, 16, 0, 1, 0, 0, 0, 7, 0, 0, 0, 1])
         message = header + body
         self.send(message)
-        global_attr['keep_heartbeat'] = True
         self.thread.start()
 
     def on_message(self, ws, message):
@@ -97,7 +83,7 @@ class LiveSocket(websocket.WebSocketApp):
                 match op:
                     case 3:
                         print("[ 心跳回復 ]")
-                        print(f"[ 直播間訊息 ] 當前直播間共{get_people_count(self.uid)}人")
+                        print(f"[ 直播間訊息 ] 當前直播間共{get_people_count(self.room_id)}人")
                     case 5:
                         data = json.loads(message[16:])
                         match data['cmd']:

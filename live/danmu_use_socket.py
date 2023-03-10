@@ -3,6 +3,7 @@ import sqlite3
 import threading
 import time
 import zlib
+import requests
 from datetime import datetime
 
 import brotli
@@ -16,31 +17,50 @@ heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
 
 global_attr = {}
 
+def uid2roomid(uid):
+    return json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={'user-agent': 'Mozilla/5.0'}).content)['data']['live_room']['roomid']
+
+def roomid2uid(room_id):
+    return json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}').content)['data']['uid']
+
+def uid2uname(uid):
+    return json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={'user-agent': 'Mozilla/5.0'}).content)['data']['name']
+
+def get_people_count(uid):
+    print(json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_info?room_id={uid2roomid(uid)}').content)['data'])
+    print(json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids?uids[]={uid}').content)['data'])
+    return json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids?uids[]={uid}').content)['data']
+
 
 def check_db():
     db_cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS danmu
-        (msg varchar, name varchar, uid int, is_admin bit, time varchar, room_id int);
+        (msg varchar, name varchar, uid int, is_admin bit, time varchar, `room id` int);
         """)
 
 
 def heartbeating(ws):
     while True:
-        if global_attr['keep_heartbeat']:
-            ws.send(heart)
-            print(">>----Heartbeat----")
-            time.sleep(30)
-        else:
-            break
-    print("Thread break.")
+        ws.send(heart)
+        print(">>----Heartbeat----")
+        time.sleep(30)
 
 
 class LiveSocket(websocket.WebSocketApp):
-    def __init__(self, room_id):
-        self.room_id = room_id
+    def __init__(self, room_id = None, uid = None):
+        if room_id:
+            self.room_id = room_id
+            self.uid = roomid2uid(room_id)
+        elif uid:
+            self.room_id = uid2roomid(uid)
+            self.uid = uid
+        else:
+            raise ValueError("You need to enter room_id or uid")
+        
         super(LiveSocket, self).__init__("wss://broadcastlv.chat.bilibili.com/sub", on_open=self.on_open,
                                          on_message=self.on_message, on_error=self.on_error, on_close=self.on_close)
         self.thread = threading.Thread(target=heartbeating, args=(self,))
+        self._keep = True
         self.run_forever()
 
     def on_open(self, ws):
@@ -50,7 +70,6 @@ class LiveSocket(websocket.WebSocketApp):
             "roomid": self.room_id
         }).encode('utf-8')
         header = bytes([0, 0, 0, 16 + len(body), 0, 16, 0, 1, 0, 0, 0, 7, 0, 0, 0, 1])
-        print(header)
         message = header + body
         self.send(message)
         global_attr['keep_heartbeat'] = True
@@ -63,10 +82,11 @@ class LiveSocket(websocket.WebSocketApp):
         print(f"Error: {args}")
 
     def on_close(self, ws, *args):
+        print(f"Connection closed with: {args}.")
         db_conn.close()
+        print("Database closed.")
         del self.thread
-        global_attr['keep_heartbeat'] = False
-        print(f"Connection closed with: {args}")
+        print("Thread break.")
 
     def parsing_msg(self, message):
         pt = message[7]
@@ -77,15 +97,18 @@ class LiveSocket(websocket.WebSocketApp):
                 match op:
                     case 3:
                         print("[ 心跳回復 ]")
+                        print(f"[ 直播間訊息 ] 當前直播間共{get_people_count(self.uid)}人")
                     case 5:
                         data = json.loads(message[16:])
-                        if data['cmd'] == 'STOP_LIVE_ROOM_LIST':
-                            print(f"[ 下播的直播間 ] pass")
-
-                        else:
-                            print(f"[ 廣播通知 ] {message[16:]}")
+                        match data['cmd']:
+                            case 'STOP_LIVE_ROOM_LIST':
+                                print(f"[ 下播的直播間 ] pass")
+                            case 'NOTICE_MSG':
+                                print(f"[ 廣播通知 ] pass")
+                            case _:
+                                print(f"[ 未知 ] {message[16:]}")
                     case 8:
-                        print(f"[ 成功進入直播間 ]")
+                        print(f"[ 進入直播間 ] 成功進入 {uid2uname(self.uid)} 的直播間")
                     case _:
                         print(f"[ 未知 ] Opcode: {op} | Received message: {message[16:]}")
             case 2 | 3:
@@ -122,7 +145,7 @@ class LiveSocket(websocket.WebSocketApp):
                             db_cursor.execute(f"""INSERT INTO danmu VALUES (?, ?, ?, ?, ?, ?);""",
                                               tuple(danmu_msg.values()))
                             db_conn.commit()
-                            print(f"[ 彈幕訊息 ] {danmu_msg}\n{data}")
+                            print(f"[ 彈幕訊息 ] {danmu_msg}")
                         case 'ENTRY_EFFECT':
                             effect = {data['data']}
                             print(f"[ 特效 ] {effect}")
@@ -144,6 +167,9 @@ class LiveSocket(websocket.WebSocketApp):
                             print(f"[ 交互訊息 ] {interact_msg}")
                         case 'ONLINE_RANK_COUNT':
                             print(f"[ 高能用戶數量 ] {data['data']['count']}人")
+                        case "ONLINE_RANK_V2":
+                            for person in data['data']['list']:
+                                print(f"[ 高能榜更新 ] 恭喜 {person['uname']} 榮登高能榜第{person['rank']}!")
                         case 'WATCHED_CHANGE':
                             print(f"[ 觀看人數 ] {data['data']['num']}人看過")
                         case _:
@@ -152,5 +178,5 @@ class LiveSocket(websocket.WebSocketApp):
 
 if __name__ == "__main__":
     time_start = time.time()
-    wsapp = LiveSocket(22320946)  # 4767523
+    wsapp = LiveSocket(room_id=5938587)  # 4767523, 22320946, 4141795
     print(time.time() - time_start)

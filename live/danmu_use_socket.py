@@ -1,13 +1,13 @@
-import json
 import sqlite3
 import threading
 import time
 import zlib
-import requests
 from datetime import datetime
-from base import *
+
 import brotli
 import websocket
+
+from utils import *
 
 db_path = '../database/bilibili_live.db'
 db_conn = sqlite3.connect(db_path)
@@ -18,8 +18,6 @@ heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
 global_attr = {}
 
 
-
-
 def check_db():
     db_cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS danmu
@@ -27,15 +25,21 @@ def check_db():
         """)
 
 
-def heartbeating(ws):
-    while True:
-        ws.send(heart)
-        print(">>----Heartbeat----")
-        time.sleep(30)
+class HeartBeating(threading.Thread):
+    def __init__(self, ws):
+        super().__init__()
+        self.keep_running = True
+        self.ws = ws
+
+    def run(self):
+        while self.keep_running:
+            self.ws.send(heart)
+            print(">>----Heartbeat----")
+            time.sleep(30)
 
 
 class LiveSocket(websocket.WebSocketApp):
-    def __init__(self, room_id = None, uid = None):
+    def __init__(self, room_id=None, uid=None):
         if room_id:
             self.room_id = room_id
             self.uid = roomid2uid(room_id)
@@ -44,10 +48,10 @@ class LiveSocket(websocket.WebSocketApp):
             self.uid = uid
         else:
             raise ValueError("You need to enter room_id or uid")
-        
-        super(LiveSocket, self).__init__("wss://broadcastlv.chat.bilibili.com/sub", on_open=self.on_open,
-                                         on_message=self.on_message, on_error=self.on_error, on_close=self.on_close)
-        self.thread = threading.Thread(target=heartbeating, args=(self,))
+
+        super(LiveSocket, self).__init__("wss://broadcastlv.chat.bilibili.com/sub", on_open=self.on_open, on_message=self.on_message,
+                                         on_error=self.on_error, on_close=self.on_close)
+        self.thread = HeartBeating(self)
         self.run_forever()
 
     def on_open(self, ws):
@@ -71,8 +75,7 @@ class LiveSocket(websocket.WebSocketApp):
         print(f"Connection closed with: {args}.")
         db_conn.close()
         print("Database closed.")
-        del self.thread
-        print("Thread break.")
+        self.thread.keep_running = False
 
     def parsing_msg(self, message):
         pt = message[7]
@@ -83,7 +86,6 @@ class LiveSocket(websocket.WebSocketApp):
                 match op:
                     case 3:
                         print("[ 心跳回復 ]")
-                        print(f"[ 直播間訊息 ] 當前直播間共{get_people_count(self.room_id)}人")
                     case 5:
                         data = json.loads(message[16:])
                         match data['cmd']:
@@ -107,8 +109,7 @@ class LiveSocket(websocket.WebSocketApp):
                 end = len(message)
                 datas = []
                 while True:
-                    body_len = (message[base] << 24) + (message[base + 1] << 16) + (message[base + 2] << 8) + message[
-                        base + 3] - 16
+                    body_len = (message[base] << 24) + (message[base + 1] << 16) + (message[base + 2] << 8) + message[base + 3] - 16
                     datas.append(json.loads(message[base + 16: base + 16 + body_len]))
                     base = base + 16 + body_len
                     if base == end:
@@ -128,8 +129,7 @@ class LiveSocket(websocket.WebSocketApp):
                                 "room_id": self.room_id
                             }
 
-                            db_cursor.execute(f"""INSERT INTO danmu VALUES (?, ?, ?, ?, ?, ?);""",
-                                              tuple(danmu_msg.values()))
+                            db_cursor.execute(f"""INSERT INTO danmu VALUES (?, ?, ?, ?, ?, ?);""", tuple(danmu_msg.values()))
                             db_conn.commit()
                             print(f"[ 彈幕訊息 ] {danmu_msg}")
                         case 'ENTRY_EFFECT':
@@ -164,5 +164,5 @@ class LiveSocket(websocket.WebSocketApp):
 
 if __name__ == "__main__":
     time_start = time.time()
-    wsapp = LiveSocket(room_id=5938587)  # 4767523, 22320946, 4141795
+    wsapp = LiveSocket(room_id=24393)  # 4767523, 22320946, 4141795
     print(time.time() - time_start)

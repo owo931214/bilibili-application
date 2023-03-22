@@ -6,6 +6,7 @@ from datetime import datetime
 
 import brotli
 import websocket
+
 from utils import *
 
 db_path = './database/live.db'
@@ -15,6 +16,7 @@ db_cursor = db_conn.cursor()
 heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
 
 global_attr = {}
+
 
 def check_db():
     db_cursor.execute(f"""
@@ -134,7 +136,7 @@ class LiveSocket(websocket.WebSocketApp):
                                 "count": data['data']['num'],
                                 "uname": data['data']['uname'],
                                 "uid": data['data']['uid'],
-                                "time": str(datetime.fromtimestamp(data['data']['timestamp'])) 
+                                "time": str(datetime.fromtimestamp(data['data']['timestamp']))
                             }
                             db_cursor.execute(f"""INSERT INTO gift VALUES (?, ?, ?, ?, ?, ?);""", tuple(gift_msg.values()) + (self.room_id,))
                             db_conn.commit()
@@ -146,7 +148,8 @@ class LiveSocket(websocket.WebSocketApp):
                                 "uname": data['data']['uname'],
                                 "uid": data['data']['uid'],
                             }
-                            db_cursor.execute(f"""INSERT INTO gift (gift, count, uname, uid, `room id`) VALUES (?, ?, ?, ?, ?);""", tuple(gift_msg.values()) + (self.room_id,))
+                            db_cursor.execute(f"""INSERT INTO gift (gift, count, uname, uid, `room id`) VALUES (?, ?, ?, ?, ?);""",
+                                              tuple(gift_msg.values()) + (self.room_id,))
                             db_conn.commit()
                             print(f"[ 禮物訊息(combo_send) ] {gift_msg}")
                         case 'DANMU_MSG':

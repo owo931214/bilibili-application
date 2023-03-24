@@ -1,7 +1,4 @@
-import requests, time
 from bilibili_api import live, sync, Credential, user
-
-
 
 sessdata = "4f3e770b%2C1675916889%2Cca246%2A81"
 bili_jct = "df25c68df5fb29302c65643bb3e8bbb0"
@@ -17,8 +14,7 @@ user = user.User(uid=599041628, credential=credential)
 fans_list = sync(user.get_followers())
 for fans in fans_list['list']:
     print(fans)
-    print(fans['uname'], fans['mid'])
-# 發送彈幕
+    print(fans['uname'], fans['mid'])  # 發送彈幕
 # url = "https://api.live.bilibili.com/msg/send"
 # params = {
 #     "color": 16777215,

@@ -88,5 +88,5 @@ if __name__ == "__main__":
     # r = check_followers_status([316045757, 128912828, 35798955, 4141795, 484819462])
     start = time.time()
     check_new_followers(5)
-    print(time.time()-start)
+    print(time.time() - start)
     check_followers_status()

@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="top_menu">
+    <file>close.png</file>
+    <file>maximize.png</file>
+    <file>minimize.png</file>
+    <file>unmaximize.png</file>
+  </qresource>
+</RCC>

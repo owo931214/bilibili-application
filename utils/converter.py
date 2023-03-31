@@ -1,5 +1,4 @@
 import json
-
 import requests
 
 
@@ -33,5 +32,16 @@ def uid2uname(uid):
     }).content)
     if data['code'] == 0:
         return data['data']['name']
+    else:
+        return None
+    
+def uid2face(uid):
+    if not uid:
+        return None
+    data = json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
+        'user-agent': 'Mozilla/5.0'
+    }).content)
+    if data['code'] == 0:
+        return data['data']['face']
     else:
         return None

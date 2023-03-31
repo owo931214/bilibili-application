@@ -19,18 +19,20 @@ global_attr = {}
 
 
 def check_db():
-    db_cursor.execute(f"""
+    db_cursor.execute("""
         CREATE TABLE IF NOT EXISTS danmu
         (message varchar, uname varchar, uid int, is_admin bit, time varchar, `room id` int);
         """)
-    db_cursor.execute(f"""
+    db_cursor.execute("""
     CREATE TABLE IF NOT EXISTS gift
     (gift varchar, count int, uname varchar, uid int, time varchar, `room id` int);
     """)
-    db_cursor.execute(f"""
+    db_cursor.execute("""
     CREATE TABLE IF NOT EXISTS guard
     (level varchar, uname varchar, uid int, time varchar, `room id` int);
     """)
+    db_cursor.execute("""DROP TABLE face""")
+    db_cursor.execute("""CREATE TABLE face (img varchar, uid int UNIQUE);""")
     db_conn.commit()
 
 
@@ -138,7 +140,7 @@ class LiveSocket(websocket.WebSocketApp):
                                 "uid": data['data']['uid'],
                                 "time": str(datetime.fromtimestamp(data['data']['timestamp']))
                             }
-                            db_cursor.execute(f"""INSERT INTO gift VALUES (?, ?, ?, ?, ?, ?);""", tuple(gift_msg.values()) + (self.room_id,))
+                            db_cursor.execute("""INSERT INTO gift VALUES (?, ?, ?, ?, ?, ?);""", tuple(gift_msg.values()) + (self.room_id,))
                             db_conn.commit()
                             print(f"[ 禮物訊息(send_gift) ] {gift_msg}")
                         case 'COMBO_SEND':
@@ -148,7 +150,7 @@ class LiveSocket(websocket.WebSocketApp):
                                 "uname": data['data']['uname'],
                                 "uid": data['data']['uid'],
                             }
-                            db_cursor.execute(f"""INSERT INTO gift (gift, count, uname, uid, `room id`) VALUES (?, ?, ?, ?, ?);""",
+                            db_cursor.execute("""INSERT INTO gift (gift, count, uname, uid, `room id`) VALUES (?, ?, ?, ?, ?);""",
                                               tuple(gift_msg.values()) + (self.room_id,))
                             db_conn.commit()
                             print(f"[ 禮物訊息(combo_send) ] {gift_msg}")
@@ -161,7 +163,7 @@ class LiveSocket(websocket.WebSocketApp):
                                 "time": str(datetime.fromtimestamp(data['info'][0][4] // 1000))
                             }
 
-                            db_cursor.execute(f"""INSERT INTO danmu VALUES (?, ?, ?, ?, ?, ?);""", tuple(danmu_msg.values()) + (self.room_id,))
+                            db_cursor.execute("""INSERT INTO danmu VALUES (?, ?, ?, ?, ?, ?);""", tuple(danmu_msg.values()) + (self.room_id,))
                             db_conn.commit()
                             print(f"[ 彈幕訊息 ] {danmu_msg}")
                         case 'ENTRY_EFFECT':
@@ -171,9 +173,9 @@ class LiveSocket(websocket.WebSocketApp):
                                 "level": data['data']['gift_name'],
                                 "uname": data['data']['username'],
                                 "uid": data['data']['uid'],
-                                "time": data['data']['start_time']
+                                "time": str(datetime.fromtimestamp(data['data']['start_time']))
                             }
-                            db_cursor.execute(f"""INSERT INTO guard VALUES (?, ?, ?, ?, ?);""", tuple(guard_msg.values()) + (self.room_id,))
+                            db_cursor.execute("""INSERT INTO guard VALUES (?, ?, ?, ?, ?);""", tuple(guard_msg.values()) + (self.room_id,))
                             db_conn.commit()
                             print(f"[ 上艦訊息 ] {guard_msg}")
                         case 'HOT_RANK_CHANGED':
@@ -185,6 +187,9 @@ class LiveSocket(websocket.WebSocketApp):
                                 "name": data['data']['uname'],
                                 "time": str(datetime.fromtimestamp(data['data']['timestamp']))
                             }
+                            if interact_msg['act'] == "進場":
+                                print(1)
+                                db_cursor.execute("INSERT OR REPLACE INTO face VALUES (?, ?);", (uid2face(interact_msg['uid']), interact_msg['uid']))
                             print(f"[ 交互訊息 ] {interact_msg}")
                         case 'LIKE_INFO_V3_CLICK':
                             print(f"[ 點讚訊息 ] 感謝 {data['data']['uname']} 點讚了直播間")

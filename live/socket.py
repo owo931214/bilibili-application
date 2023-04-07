@@ -7,7 +7,7 @@ from datetime import datetime
 import brotli
 import websocket
 
-from utils import *
+from utils.converter import *
 
 db_path = './database/live.db'
 db_conn = sqlite3.connect(db_path)
@@ -31,8 +31,6 @@ def check_db():
     CREATE TABLE IF NOT EXISTS guard
     (level varchar, uname varchar, uid int, time varchar, `room id` int);
     """)
-    db_cursor.execute("""DROP TABLE face""")
-    db_cursor.execute("""CREATE TABLE face (img varchar, uid int UNIQUE);""")
     db_conn.commit()
 
 
@@ -187,9 +185,6 @@ class LiveSocket(websocket.WebSocketApp):
                                 "name": data['data']['uname'],
                                 "time": str(datetime.fromtimestamp(data['data']['timestamp']))
                             }
-                            if interact_msg['act'] == "進場":
-                                print(1)
-                                db_cursor.execute("INSERT OR REPLACE INTO face VALUES (?, ?);", (uid2face(interact_msg['uid']), interact_msg['uid']))
                             print(f"[ 交互訊息 ] {interact_msg}")
                         case 'LIKE_INFO_V3_CLICK':
                             print(f"[ 點讚訊息 ] 感謝 {data['data']['uname']} 點讚了直播間")

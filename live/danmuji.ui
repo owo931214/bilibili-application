@@ -25,8 +25,9 @@
     </property>
     <property name="styleSheet">
      <string notr="true">border: none;
-background-color: rgba(255, 255, 255, 0);
-font: 24pt &quot;Adobe Gothic Std B&quot;;</string>
+                        background-color: rgba(255, 255, 255, 0);
+                        font: 24pt &quot;Adobe Gothic Std B&quot;;
+                    </string>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -36,27 +37,21 @@ font: 24pt &quot;Adobe Gothic Std B&quot;;</string>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
      <item>
-      <widget class="QPlainTextEdit" name="pte">
+      <widget class="QTextEdit" name="te">
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
        <property name="verticalScrollBarPolicy">
         <enum>Qt::ScrollBarAlwaysOff</enum>
        </property>
        <property name="horizontalScrollBarPolicy">
         <enum>Qt::ScrollBarAlwaysOff</enum>
        </property>
-       <property name="lineWrapMode">
-        <enum>QPlainTextEdit::WidgetWidth</enum>
-       </property>
        <property name="readOnly">
         <bool>true</bool>
        </property>
-       <property name="plainText">
-        <string/>
-       </property>
        <property name="textInteractionFlags">
         <set>Qt::NoTextInteraction</set>
-       </property>
-       <property name="maximumBlockCount">
-        <number>10</number>
        </property>
       </widget>
      </item>

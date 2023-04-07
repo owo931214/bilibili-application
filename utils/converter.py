@@ -1,3 +1,4 @@
+import base64
 import json
 import requests
 
@@ -34,7 +35,8 @@ def uid2uname(uid):
         return data['data']['name']
     else:
         return None
-    
+
+
 def uid2face(uid):
     if not uid:
         return None
@@ -42,6 +44,6 @@ def uid2face(uid):
         'user-agent': 'Mozilla/5.0'
     }).content)
     if data['code'] == 0:
-        return data['data']['face']
+        return base64.b64encode(requests.get(data['data']['face']).content)
     else:
         return None

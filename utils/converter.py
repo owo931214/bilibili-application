@@ -1,6 +1,12 @@
 import base64
 import json
+import sys
+import time
+import zlib
+from io import BytesIO
+
 import requests
+from PIL import Image
 
 
 def uid2roomid(uid):
@@ -38,12 +44,24 @@ def uid2uname(uid):
 
 
 def uid2face(uid):
+
     if not uid:
         return None
     data = json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
         'user-agent': 'Mozilla/5.0'
     }).content)
     if data['code'] == 0:
-        return base64.b64encode(requests.get(data['data']['face']).content)
+        image = requests.get(data['data']['face']).content
+        image = Image.open(BytesIO(image)).resize((100, 100), Image.LANCZOS)
+        byte_image = BytesIO()
+        image.save(byte_image, format='WEBP', optimize=True, quality=1)
+        image = base64.b64encode(byte_image.getvalue())
+        image = zlib.compress(image)
+        return image
     else:
         return None
+
+
+def face_decompress(face):
+    image = zlib.decompress(face)
+    return image

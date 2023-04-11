@@ -22,38 +22,33 @@ class Danmuji(QMainWindow):
         self.color_index = 0
         self.mouse_click_left = False
         self.mouse_clicked_pos = None
+        self.textedit = self.ui.te
+        self.textedit_cursor = self.textedit.textCursor()
+        self.textedit_document = self.textedit.document()
         self.ui.te.setAlignment(Qt.AlignBottom)
-        self.append_msg("11111111111111111111111111111111111111111111111111")
         QApplication.processEvents()
         for i in range(20):
             self.append_msg(i)
             QApplication.processEvents()
-            time.sleep(0.5)
+            time.sleep(0.1)
 
     def append_msg(self, msg):
-        # self.ui.te.insertHtml(f"""
-        #     <div style="display: flex, inline; align-items: flex-start;">
-        #         <img src="data:image/png;base64,{uid2face(1).decode()}" style="border-radius: 50%;margin-right: 10px; align-self: flex-start;">
-        #         <p style="color: {color_list[self.color_index]}; display: flex; flex-direction: column; align-items: flex-start; margin: 0;
-        #         text-align: justify;">{msg}</p>
-        #     </div>
-        # """)
-        self.ui.te.insertHtml(f"""
-                    <img src="data:image/png;base64,{uid2face(1).decode()}" style="border-radius: 50%;margin-right: 10px; align-self: flex-start;">
-                    </div>
-                """)
+        self.textedit_cursor.insertBlock()
+        self.textedit_cursor.insertHtml(f"""
+            <p style="color: {color_list[self.color_index]};"><img src="data:image/png;base64,{uid2face(1).decode()}">{str(msg)}</p>
+        """)
         self.color_index += 1
         if self.color_index == len(color_list):
             self.color_index = 0
 
-    def mousePressEvent(self, event) -> None:
+    def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and not self.isMaximized():
             self.mouse_click_left = True
             self.mouse_clicked_pos = event.globalPos() - self.pos()
             event.accept()
             self.setCursor(QCursor(Qt.OpenHandCursor))
 
-    def mouseMoveEvent(self, event) -> None:
+    def mouseMoveEvent(self, event):
         if Qt.LeftButton and self.mouse_click_left:
             self.move(event.globalPos() - self.mouse_clicked_pos)
             event.accept()

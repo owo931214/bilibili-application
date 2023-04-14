@@ -10,7 +10,7 @@ from live.danmuji import Ui_MainWindow
 color_list = ["#ff0000", "#ff4d00", "#ff8400", "#ffae00", "#ffd500", "#c8ff00", "#a2ff00", "#40ff00", "#00ff8c", "#00ffbf", "#00ffea", "#00a6ff",
               "#007bff", "#0062ff", "#0040ff", "#001aff", "#0d00ff", "#2b00ff", "#4800ff", "#6200ff", "#8000ff", "#9d00ff", "#ff0055", "#ff0033"]
 
-
+#uid = 690121705
 class Danmuji(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -19,6 +19,7 @@ class Danmuji(QMainWindow):
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.show()
+        self.face = {}
         self.color_index = 0
         self.mouse_click_left = False
         self.mouse_clicked_pos = None
@@ -28,15 +29,19 @@ class Danmuji(QMainWindow):
         self.ui.te.setAlignment(Qt.AlignBottom)
         QApplication.processEvents()
         for i in range(20):
-            self.append_msg(i)
+            self.append_msg(690121705, i)
             QApplication.processEvents()
             time.sleep(0.1)
 
-    def append_msg(self, msg):
+    def append_msg(self, uid, msg):
+        if uid not in self.face:
+            self.face.update({uid:uid2face(uid)})
         self.textedit_cursor.insertBlock()
         self.textedit_cursor.insertHtml(f"""
-            <p style="color: {color_list[self.color_index]};"><img src="data:image/png;base64,{uid2face(1).decode()}">{str(msg)}</p>
+            <p style="color: {color_list[self.color_index]};"><img src="data:image/png;base64,{face_decompress(self.face[uid])}" width="30" height="30" style="border-radius:50%">{str(msg)}</p>
         """)
+        self.textedit.moveCursor(self.textedit_cursor.End)
+        self.textedit.ensureCursorVisible()
         self.color_index += 1
         if self.color_index == len(color_list):
             self.color_index = 0

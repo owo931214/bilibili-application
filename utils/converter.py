@@ -63,5 +63,5 @@ def uid2face(uid):
 
 
 def face_decompress(face):
-    image = zlib.decompress(face)
+    image = zlib.decompress(face).decode()
     return image

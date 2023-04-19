@@ -1,12 +1,10 @@
 import base64
 import json
-import sys
-import time
 import zlib
 from io import BytesIO
 
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw
 
 
 def uid2roomid(uid):
@@ -44,7 +42,6 @@ def uid2uname(uid):
 
 
 def uid2face(uid):
-
     if not uid:
         return None
     data = json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
@@ -52,9 +49,17 @@ def uid2face(uid):
     }).content)
     if data['code'] == 0:
         image = requests.get(data['data']['face']).content
-        image = Image.open(BytesIO(image)).resize((100, 100), Image.LANCZOS)
+        image = Image.open(BytesIO(image)).resize((50, 50), Image.LANCZOS)
+
+        # 用圓形遮罩圖片
+        mask = Image.new('L', (50, 50), 0)
+        draw = ImageDraw.Draw(mask)
+        draw.pieslice(((0, 0), (50, 50)), 0, 359, fill=255)
+        image.putalpha(mask)
+
+        # 保存並壓縮圖片
         byte_image = BytesIO()
-        image.save(byte_image, format='WEBP', optimize=True, quality=1)
+        image.save(byte_image, format='WEBP', optimize=True, quality=10)
         image = base64.b64encode(byte_image.getvalue())
         image = zlib.compress(image)
         return image

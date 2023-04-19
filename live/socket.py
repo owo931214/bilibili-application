@@ -1,7 +1,5 @@
 import sqlite3
 import threading
-import time
-import zlib
 from datetime import datetime
 
 import brotli

@@ -1,16 +1,18 @@
 import sys
 import time
-from utils.converter import *
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from live.danmuji import Ui_MainWindow
+from utils.converter import *
 
 color_list = ["#ff0000", "#ff4d00", "#ff8400", "#ffae00", "#ffd500", "#c8ff00", "#a2ff00", "#40ff00", "#00ff8c", "#00ffbf", "#00ffea", "#00a6ff",
               "#007bff", "#0062ff", "#0040ff", "#001aff", "#0d00ff", "#2b00ff", "#4800ff", "#6200ff", "#8000ff", "#9d00ff", "#ff0055", "#ff0033"]
 
-#uid = 690121705
+
+# uid = 690121705
 class Danmuji(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -18,7 +20,6 @@ class Danmuji(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.show()
         self.face = {}
         self.color_index = 0
         self.mouse_click_left = False
@@ -27,18 +28,23 @@ class Danmuji(QMainWindow):
         self.textedit_cursor = self.textedit.textCursor()
         self.textedit_document = self.textedit.document()
         self.ui.te.setAlignment(Qt.AlignBottom)
-        QApplication.processEvents()
         for i in range(20):
-            self.append_msg(690121705, i)
-            QApplication.processEvents()
-            time.sleep(0.1)
+            self.textedit_cursor.insertBlock()
+        self.textedit.ensureCursorVisible()
+        self.show()
 
     def append_msg(self, uid, msg):
         if uid not in self.face:
-            self.face.update({uid:uid2face(uid)})
+            self.face.update({
+                uid: uid2face(uid)
+            })
         self.textedit_cursor.insertBlock()
         self.textedit_cursor.insertHtml(f"""
-            <p style="color: {color_list[self.color_index]};"><img src="data:image/png;base64,{face_decompress(self.face[uid])}" width="30" height="30" style="border-radius:50%">{str(msg)}</p>
+            <p style="color: {color_list[self.color_index]};">
+                <img src="data:image/png;base64,{face_decompress(self.face[uid])}"
+                width=30 style="border-radius: 30px;">
+                {str(msg)}
+             </p>
         """)
         self.textedit.moveCursor(self.textedit_cursor.End)
         self.textedit.ensureCursorVisible()
@@ -62,7 +68,8 @@ class Danmuji(QMainWindow):
         self.mouse_click_left = False
         self.setCursor(QCursor(Qt.ArrowCursor))
 
-
-app = QApplication(sys.argv)
-ui = Danmuji()
-sys.exit(app.exec_())
+    def msg_test(self):
+        for i in range(25):
+            self.append_msg(599041628, i)
+            QApplication.processEvents()
+            time.sleep(0.1)

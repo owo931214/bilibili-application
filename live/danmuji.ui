@@ -1,64 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>300</width>
-    <height>800</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>MainWindow</string>
-  </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QFrame" name="frame">
-    <property name="geometry">
-     <rect>
-      <x>-1</x>
-      <y>-1</y>
-      <width>301</width>
-      <height>801</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border: none;
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>300</width>
+                <height>800</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>MainWindow</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <widget class="QFrame" name="frame">
+                <property name="geometry">
+                    <rect>
+                        <x>-1</x>
+                        <y>-1</y>
+                        <width>301</width>
+                        <height>801</height>
+                    </rect>
+                </property>
+                <property name="styleSheet">
+                    <string notr="true">border: none;
                         background-color: rgba(255, 255, 255, 0);
                         font: 24pt &quot;Adobe Gothic Std B&quot;;
                     </string>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
-     <item>
-      <widget class="QTextEdit" name="te">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="verticalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
-       <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-       <property name="textInteractionFlags">
-        <set>Qt::NoTextInteraction</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
- </widget>
- <resources/>
- <connections/>
+                </property>
+                <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
+                    <item>
+                        <widget class="QTextEdit" name="te">
+                            <property name="styleSheet">
+                                <string notr="true"/>
+                            </property>
+                            <property name="verticalScrollBarPolicy">
+                                <enum>Qt::ScrollBarAlwaysOff</enum>
+                            </property>
+                            <property name="horizontalScrollBarPolicy">
+                                <enum>Qt::ScrollBarAlwaysOff</enum>
+                            </property>
+                            <property name="readOnly">
+                                <bool>true</bool>
+                            </property>
+                            <property name="textInteractionFlags">
+                                <set>Qt::NoTextInteraction</set>
+                            </property>
+                        </widget>
+                    </item>
+                </layout>
+            </widget>
+        </widget>
+    </widget>
+    <resources/>
+    <connections/>
 </ui>

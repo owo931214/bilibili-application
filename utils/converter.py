@@ -54,14 +54,15 @@ def uid2face(uid):
         # 用圓形遮罩圖片
         mask = Image.new('L', (50, 50), 0)
         draw = ImageDraw.Draw(mask)
-        draw.pieslice(((0, 0), (50, 50)), 0, 359, fill=255)
+        draw.pieslice(((0, 0), (50, 50)), 0, 360, fill=255)
         image.putalpha(mask)
 
         # 保存並壓縮圖片
         byte_image = BytesIO()
-        image.save(byte_image, format='WEBP', optimize=True, quality=10)
+        image.save(byte_image, format='WEBP', optimize=True, quality=1)
         image = base64.b64encode(byte_image.getvalue())
         image = zlib.compress(image)
+        print(len(image))
         return image
     else:
         return None

@@ -70,6 +70,6 @@ class Danmuji(QMainWindow):
 
     def msg_test(self):
         for i in range(25):
-            self.append_msg(599041628, i)
+            self.append_msg(24992412, i)
             QApplication.processEvents()
             time.sleep(0.1)

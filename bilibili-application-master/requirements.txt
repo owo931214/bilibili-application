@@ -1,6 +1,0 @@
-websocket-client~=1.5.1
-PyQt5~=5.15.9
-PyQt5Designer
-brotli~=1.0.9
-requests~=2.27.1
-Pillow~=9.5.0

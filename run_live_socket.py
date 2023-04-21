@@ -21,10 +21,10 @@ class MyLiveSocket(LiveSocket):
         CREATE TABLE IF NOT EXISTS guard
         (level varchar, uname varchar, uid int, time varchar, `room id` int);
         """)
-        # TODO
-        # self.db_cursor.execute("""
-        # CREATE TABLE IF NOT EXISTS 
-        # """)
+        self.db_cursor.execute("""
+        CREATE TABLE IF NOT EXISTS enter
+        (uname varchar, uid int, time varchar, `room id` int);
+        """)
         self.db_conn.commit()
 
         self.start()
@@ -45,9 +45,11 @@ class MyLiveSocket(LiveSocket):
     def on_guard(self):
         self.db_cursor.execute("""INSERT INTO guard VALUES (?, ?, ?, ?, ?);""", tuple(self.msg.values()) + (self.room_id,))
         self.db_conn.commit()
+                      
+    def on_enter(self):
+        print(tuple(self.msg.values())[1:] + (self.room_id,))
+        self.db_cursor.execute("""INSERT INTO enter VALUES (?, ?, ?, ?);""", tuple(self.msg.values())[1:] + (self.room_id,))
+        self.db_conn.commit()
 
-    def on_interact(self):
-        pass
-
-
-MyLiveSocket(uid=128912828)
+if __name__ = "__main__":
+    MyLiveSocket(uid=128912828)

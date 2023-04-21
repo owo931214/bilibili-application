@@ -71,7 +71,9 @@ class LiveSocket(websocket.WebSocketApp):
         pass
     def on_guard(self):
         pass
-    def on_interact(self):
+    def on_enter(self):
+        pass
+    def on_follow(self):
         pass
 
     def parsing_msg(self, message):
@@ -165,12 +167,15 @@ class LiveSocket(websocket.WebSocketApp):
                         case 'INTERACT_WORD':
                             self.msg = {
                                 "act": "關注" if data['data']['msg_type'] == 2 else "進場",
-                                "uid": data['data']['uid'],
                                 "name": data['data']['uname'],
+                                "uid": data['data']['uid'],
                                 "time": str(datetime.fromtimestamp(data['data']['timestamp']))
                             }
                             print(f"[ 交互訊息 ] {self.msg}")
-                            self.on_interact()
+                            if data['data']['msg_type'] == 2:
+                                self.on_follow()
+                            else:
+                                self.on_enter()
                         case 'LIKE_INFO_V3_CLICK':
                             print(f"[ 點讚訊息 ] 感謝 {data['data']['uname']} 點讚了直播間")
                         case 'LIKE_INFO_V3_UPDATE':

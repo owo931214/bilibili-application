@@ -1,35 +1,15 @@
 import sqlite3
 import threading
 from datetime import datetime
+import time
 
 import brotli
 import websocket
 
 from utils.converter import *
 
-db_path = './database/live.db'
-db_conn = sqlite3.connect(db_path)
-db_cursor = db_conn.cursor()
 
 heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
-
-global_attr = {}
-
-
-def check_db():
-    db_cursor.execute("""
-        CREATE TABLE IF NOT EXISTS danmu
-        (message varchar, uname varchar, uid int, is_admin bit, time varchar, `room id` int);
-        """)
-    db_cursor.execute("""
-    CREATE TABLE IF NOT EXISTS gift
-    (gift varchar, count int, uname varchar, uid int, time varchar, `room id` int);
-    """)
-    db_cursor.execute("""
-    CREATE TABLE IF NOT EXISTS guard
-    (level varchar, uname varchar, uid int, time varchar, `room id` int);
-    """)
-    db_conn.commit()
 
 
 class HeartBeating(threading.Thread):
@@ -55,14 +35,15 @@ class LiveSocket(websocket.WebSocketApp):
             self.uid = uid
         else:
             raise ValueError("You need to enter room_id or uid")
-
+        self.msg = None
         super(LiveSocket, self).__init__("wss://broadcastlv.chat.bilibili.com/sub", on_open=self.on_open, on_message=self.on_message,
                                          on_error=self.on_error, on_close=self.on_close)
+
+    def start(self):
         self.thread = HeartBeating(self)
         self.run_forever()
 
     def on_open(self, ws):
-        check_db()
         body = json.dumps({
             "uid": 0,
             "roomid": self.room_id
@@ -80,9 +61,18 @@ class LiveSocket(websocket.WebSocketApp):
 
     def on_close(self, ws, *args):
         print(f"Connection closed with: {args}.")
-        db_conn.close()
         print("Database closed.")
         self.thread.keep_running = False
+    
+    # 收到對應指令碼時執行
+    def on_gift(self):
+        pass
+    def on_danmu(self):
+        pass
+    def on_guard(self):
+        pass
+    def on_interact(self):
+        pass
 
     def parsing_msg(self, message):
         pt = message[7]
@@ -129,61 +119,58 @@ class LiveSocket(websocket.WebSocketApp):
                     # TODO
                     match data['cmd']:
                         case 'SEND_GIFT':
-                            gift_msg = {
+                            self.msg = {
                                 "giftname": data['data']['giftName'],
                                 "count": data['data']['num'],
                                 "uname": data['data']['uname'],
                                 "uid": data['data']['uid'],
                                 "time": str(datetime.fromtimestamp(data['data']['timestamp']))
                             }
-                            db_cursor.execute("""INSERT INTO gift VALUES (?, ?, ?, ?, ?, ?);""", tuple(gift_msg.values()) + (self.room_id,))
-                            db_conn.commit()
-                            print(f"[ 禮物訊息(send_gift) ] {gift_msg}")
+                            print(f"[ 禮物訊息(send_gift) ] {self.msg}")
+                            self.on_gift()
                         case 'COMBO_SEND':
-                            gift_msg = {
+                            self.msg = {
                                 "giftname": data[data]['gift_name'],
                                 "count": data[data]['total_num'],
                                 "uname": data['data']['uname'],
                                 "uid": data['data']['uid'],
+                                "time": str(datetime.now())[:-7]
                             }
-                            db_cursor.execute("""INSERT INTO gift (gift, count, uname, uid, `room id`) VALUES (?, ?, ?, ?, ?);""",
-                                              tuple(gift_msg.values()) + (self.room_id,))
-                            db_conn.commit()
-                            print(f"[ 禮物訊息(combo_send) ] {gift_msg}")
+                            print(f"[ 禮物訊息(combo_send) ] {self.msg}")
+                            self.on_gift()
                         case 'DANMU_MSG':
-                            danmu_msg = {
+                            self.msg = {
                                 "msg": data['info'][1],
                                 "uname": data['info'][2][1],
                                 "uid": data['info'][2][0],
                                 "is_admin": bool(data['info'][2][2]),
                                 "time": str(datetime.fromtimestamp(data['info'][0][4] // 1000))
                             }
-
-                            db_cursor.execute("""INSERT INTO danmu VALUES (?, ?, ?, ?, ?, ?);""", tuple(danmu_msg.values()) + (self.room_id,))
-                            db_conn.commit()
-                            print(f"[ 彈幕訊息 ] {danmu_msg}")
+                            print(f"[ 彈幕訊息 ] {self.msg}")
+                            self.on_danmu()
                         case 'ENTRY_EFFECT':
                             print(f"[ 特效 ] pass")
                         case 'GUARD_BUY':
-                            guard_msg = {
+                            self.msg = {
                                 "level": data['data']['gift_name'],
                                 "uname": data['data']['username'],
                                 "uid": data['data']['uid'],
                                 "time": str(datetime.fromtimestamp(data['data']['start_time']))
                             }
-                            db_cursor.execute("""INSERT INTO guard VALUES (?, ?, ?, ?, ?);""", tuple(guard_msg.values()) + (self.room_id,))
-                            db_conn.commit()
-                            print(f"[ 上艦訊息 ] {guard_msg}")
+                            
+                            print(f"[ 上艦訊息 ] {self.msg}")
+                            self.on_guard()
                         case 'HOT_RANK_CHANGED':
                             pass  # TODO
                         case 'INTERACT_WORD':
-                            interact_msg = {
+                            self.msg = {
                                 "act": "關注" if data['data']['msg_type'] == 2 else "進場",
                                 "uid": data['data']['uid'],
                                 "name": data['data']['uname'],
                                 "time": str(datetime.fromtimestamp(data['data']['timestamp']))
                             }
-                            print(f"[ 交互訊息 ] {interact_msg}")
+                            print(f"[ 交互訊息 ] {self.msg}")
+                            self.on_interact()
                         case 'LIKE_INFO_V3_CLICK':
                             print(f"[ 點讚訊息 ] 感謝 {data['data']['uname']} 點讚了直播間")
                         case 'LIKE_INFO_V3_UPDATE':

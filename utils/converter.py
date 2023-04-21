@@ -8,45 +8,58 @@ from PIL import Image, ImageDraw
 
 
 def uid2roomid(uid):
-    if not uid:
-        return None
-    data = json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
+    data = requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
         'user-agent': 'Mozilla/5.0'
-    }).content)['data']['live_room']
+    }).content.decode()
+
+    # 2023/4/21 出現 {"code":-509,.....}{"code":0.....} 的情況
+    if data[45:47] == "}{":
+        data = data[46:]
+
+    data = json.loads(data)['data']['live_room']
     if data:
         return data['roomid']
     else:
+        print(data['code'])
         return None
 
 
 def roomid2uid(room_id):
-    if not room_id:
-        return None
     data = json.loads(requests.get(f'https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}').content)['data']
     if data:
         return data['uid']
     else:
+        print(data['code'])
         return None
 
 
 def uid2uname(uid):
-    if not uid:
-        return None
-    data = json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
+    data = requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
         'user-agent': 'Mozilla/5.0'
-    }).content)
+    }).content.decode()
+
+    # 2023/4/21 出現 {"code":-509,.....}{"code":0.....} 的情況
+    if data[45:47] == "}{":
+        data = data[46:]
+
+    data = json.loads(data)
     if data['code'] == 0:
         return data['data']['name']
     else:
+        print(data['code'])
         return None
 
 
 def uid2face(uid):
-    if not uid:
-        return None
-    data = json.loads(requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
+    data = requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
         'user-agent': 'Mozilla/5.0'
-    }).content)
+    }).content.decode()
+
+    # 2023/4/21 出現 {"code":-509,.....}{"code":0.....} 的情況
+    if data[45:47] == "}{":
+        data = data[46:]
+
+    data = json.loads(data)
     if data['code'] == 0:
         image = requests.get(data['data']['face']).content
         image = Image.open(BytesIO(image)).resize((50, 50), Image.LANCZOS)
@@ -62,9 +75,9 @@ def uid2face(uid):
         image.save(byte_image, format='WEBP', optimize=True, quality=1)
         image = base64.b64encode(byte_image.getvalue())
         image = zlib.compress(image)
-        print(len(image))
         return image
     else:
+        print(data['code'])
         return None
 
 

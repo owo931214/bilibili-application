@@ -6,6 +6,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 from live.ui_ctrl import Danmuji
+from live.socket import LiveSocket
 
 app = QApplication(sys.argv)
 ui = Danmuji()

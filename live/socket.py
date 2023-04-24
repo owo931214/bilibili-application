@@ -1,14 +1,13 @@
-import sqlite3
 import threading
-from datetime import datetime
 import time
+from datetime import datetime
 
 import brotli
 import websocket
 
 from utils.converter import *
 
-
+# 128912828 沙月, 22320946 純寶, 4141795 小沙月, 768756 滋蹦, 24393 雪狐
 heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
 
 
@@ -27,6 +26,7 @@ class HeartBeating(threading.Thread):
 
 class LiveSocket(websocket.WebSocketApp):
     def __init__(self, room_id=None, uid=None):
+        self.heartbeat = None
         if room_id:
             self.room_id = room_id
             self.uid = roomid2uid(room_id)
@@ -40,7 +40,7 @@ class LiveSocket(websocket.WebSocketApp):
                                          on_error=self.on_error, on_close=self.on_close)
 
     def start(self):
-        self.thread = HeartBeating(self)
+        self.heartbeat = HeartBeating(self)
         self.run_forever()
 
     def on_open(self, ws):
@@ -51,7 +51,7 @@ class LiveSocket(websocket.WebSocketApp):
         header = bytes([0, 0, 0, 16 + len(body), 0, 16, 0, 1, 0, 0, 0, 7, 0, 0, 0, 1])
         message = header + body
         self.send(message)
-        self.thread.start()
+        self.heartbeat.start()
 
     def on_message(self, ws, message):
         self.parsing_msg(message)
@@ -62,17 +62,21 @@ class LiveSocket(websocket.WebSocketApp):
     def on_close(self, ws, *args):
         print(f"Connection closed with: {args}.")
         print("Database closed.")
-        self.thread.keep_running = False
-    
+        self.heartbeat.keep_running = False
+
     # 收到對應指令碼時執行
     def on_gift(self):
         pass
+
     def on_danmu(self):
         pass
+
     def on_guard(self):
         pass
+
     def on_enter(self):
         pass
+
     def on_follow(self):
         pass
 
@@ -159,7 +163,7 @@ class LiveSocket(websocket.WebSocketApp):
                                 "uid": data['data']['uid'],
                                 "time": str(datetime.fromtimestamp(data['data']['start_time']))
                             }
-                            
+
                             print(f"[ 上艦訊息 ] {self.msg}")
                             self.on_guard()
                         case 'HOT_RANK_CHANGED':

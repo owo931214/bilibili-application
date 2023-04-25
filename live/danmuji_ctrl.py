@@ -1,3 +1,4 @@
+import threading
 import time
 from random import randint
 
@@ -13,6 +14,7 @@ color_list = ["#ff0000", "#ff4d00", "#ff8400", "#ffae00", "#ffd500", "#c8ff00", 
 
 
 # uid = 690121705
+
 class Danmuji(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -51,6 +53,7 @@ class Danmuji(QMainWindow):
         self.color_index += 1
         if self.color_index == len(color_list):
             self.color_index = 0
+        QApplication.processEvents()
 
     # def mousePressEvent(self, event):
     #     if event.button() == Qt.LeftButton and not self.isMaximized():

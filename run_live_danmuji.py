@@ -1,10 +1,25 @@
 import sys
 import threading
 
+from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication
+from PyQt5 import QtCore
 
 from live.danmuji_ctrl import Danmuji
 from live.socket import LiveSocket
+
+
+class Thread(QThread):
+    finished = QtCore.pyqtSignal()
+
+    def __init__(self, func, cls):
+        super().__init__()
+        self.cls = cls
+        self.func = func
+
+    def run(self):
+        self.func(self.cls)
+        self.finished.emit()
 
 
 class Main(LiveSocket):
@@ -12,14 +27,13 @@ class Main(LiveSocket):
         super().__init__(room_id, uid)
         self.app = QApplication(sys.argv)
         self.danmuji = Danmuji()
-        self.danmuji.append_msg(self.uid, "彈幕機已開啟")
-        self.ui_thread = threading.Thread(target=self.start)
-        self.ui_thread.start()
-        sys.exit(self.app.exec_())
+        threading.Thread(target=self.app.exec_)
+        self.start()
 
     def on_danmu(self):
         self.danmuji.append_msg(self.msg['uid'], self.msg['msg'])
+        QApplication.processEvents()
 
 
 if __name__ == "__main__":
-    Main(room_id=22320946)
+    Main(room_id=675014)

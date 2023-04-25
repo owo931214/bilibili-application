@@ -7,19 +7,20 @@ import websocket
 
 from utils.converter import *
 
+
 # 128912828 沙月, 22320946 純寶, 4141795 小沙月, 768756 滋蹦, 24393 雪狐
-heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
 
 
 class HeartBeating(threading.Thread):
     def __init__(self, ws):
         super().__init__()
+        self.heart = bytes([0, 0, 0, 18, 0, 16, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1])
         self.keep_running = True
         self.ws = ws
 
     def run(self):
         while self.keep_running:
-            self.ws.send(heart)
+            self.ws.send(self.heart)
             print(">>----Heartbeat----")
             time.sleep(30)
 
@@ -36,8 +37,8 @@ class LiveSocket(websocket.WebSocketApp):
         else:
             raise ValueError("You need to enter room_id or uid")
         self.msg = None
-        super(LiveSocket, self).__init__("wss://broadcastlv.chat.bilibili.com/sub", on_open=self.on_open, on_message=self.on_message,
-                                         on_error=self.on_error, on_close=self.on_close)
+        super().__init__("wss://broadcastlv.chat.bilibili.com/sub", on_open=self.on_open, on_message=self.on_message, on_error=self.on_error,
+                         on_close=self.on_close)
 
     def start(self):
         self.heartbeat = HeartBeating(self)

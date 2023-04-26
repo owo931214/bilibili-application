@@ -2,7 +2,9 @@ import threading
 import time
 from random import randint
 
-from PyQt5.QtCore import Qt
+from functools import wraps
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
@@ -15,6 +17,7 @@ color_list = ["#ff0000", "#ff4d00", "#ff8400", "#ffae00", "#ffd500", "#c8ff00", 
 
 # uid = 690121705
 
+
 class Danmuji(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -22,7 +25,7 @@ class Danmuji(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.face = {}
+        # self.face = {}
         self.color_index = randint(0, 23)
         self.mouse_click_left = False
         self.mouse_clicked_pos = None
@@ -35,18 +38,10 @@ class Danmuji(QMainWindow):
         self.textedit.ensureCursorVisible()
         self.show()
 
-    def append_msg(self, uid, msg):
-        if uid not in self.face:
-            self.face.update({
-                uid: uid2face(uid)
-            })
+    def append_msg(self, msg):
         self.textedit_cursor.insertBlock()
         self.textedit_cursor.insertHtml(f"""
-            <p style="color: {color_list[self.color_index]};">
-                <img src="data:image/png;base64,{face_decompress(self.face[uid])}"
-               width="50" height="50">
-                {str(msg)}
-             </p>
+            <p style="color: {color_list[self.color_index]};">{msg}</p>
         """)
         self.textedit.moveCursor(self.textedit_cursor.End)
         self.textedit.ensureCursorVisible()
@@ -54,6 +49,29 @@ class Danmuji(QMainWindow):
         if self.color_index == len(color_list):
             self.color_index = 0
         QApplication.processEvents()
+
+
+    # def append_msg(self, uid, msg):
+    #     if uid not in self.face:
+    #         self.face.update({
+    #             uid: uid2face(uid)
+    #         })
+    #     self.textedit_cursor.insertBlock()
+    #     self.textedit_cursor.insertHtml(f"""
+    #         <p style="color: {color_list[self.color_index]};">
+    #             <img src="data:image/png;base64,{face_decompress(self.face[uid])}"
+    #            width="50" height="50">
+    #             {str(msg)}
+    #          </p>
+    #     """)
+    #     self.textedit.moveCursor(self.textedit_cursor.End)
+    #     self.textedit.ensureCursorVisible()
+    #     self.color_index += 1
+    #     if self.color_index == len(color_list):
+    #         self.color_index = 0
+    #     QApplication.processEvents()
+
+
 
     # def mousePressEvent(self, event):
     #     if event.button() == Qt.LeftButton and not self.isMaximized():

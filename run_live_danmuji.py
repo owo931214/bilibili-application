@@ -2,9 +2,10 @@ import sys
 import threading
 
 from PyQt5.QtWidgets import QApplication
-from utils.converter import *
+
 from live.danmuji_ctrl import Danmuji
 from live.socket import LiveSocket
+from utils.converter import *
 
 
 class Main(LiveSocket):

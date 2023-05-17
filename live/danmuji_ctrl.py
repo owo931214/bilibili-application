@@ -1,15 +1,10 @@
-import threading
-import time
 from random import randint
 
-from functools import wraps
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from live.danmuji import Ui_MainWindow
-from utils.converter import *
 
 color_list = ["#ff0000", "#ff4d00", "#ff8400", "#ffae00", "#ffd500", "#c8ff00", "#a2ff00", "#40ff00", "#00ff8c", "#00ffbf", "#00ffea", "#00a6ff",
               "#007bff", "#0062ff", "#0040ff", "#001aff", "#0d00ff", "#2b00ff", "#4800ff", "#6200ff", "#8000ff", "#9d00ff", "#ff0055", "#ff0033"]
@@ -50,19 +45,18 @@ class Danmuji(QMainWindow):
             self.color_index = 0
         QApplication.processEvents()
 
-
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and not self.isMaximized():
             self.mouse_click_left = True
             self.mouse_clicked_pos = event.globalPos() - self.pos()
             event.accept()
             self.setCursor(QCursor(Qt.OpenHandCursor))
-    
+
     def mouseMoveEvent(self, event):
         if Qt.LeftButton and self.mouse_click_left:
             self.move(event.globalPos() - self.mouse_clicked_pos)
             event.accept()
-    
+
     def mouseReleaseEvent(self, event):
         self.mouse_click_left = False
         self.setCursor(QCursor(Qt.ArrowCursor))

@@ -20,7 +20,7 @@ def uid2roomid(uid):
     if data:
         return data['roomid']
     else:
-        print(data['code'])
+        print(data)
         return None
 
 
@@ -29,7 +29,7 @@ def roomid2uid(room_id):
     if data:
         return data['uid']
     else:
-        print(data['code'])
+        print(data)
         return None
 
 
@@ -46,7 +46,7 @@ def uid2uname(uid):
     if data['code'] == 0:
         return data['data']['name']
     else:
-        print(data['code'])
+        print(data)
         return None
 
 
@@ -54,7 +54,7 @@ def uid2face(uid):
     data = requests.get(f"https://api.bilibili.com/x/space/acc/info?mid={uid}", headers={
         'user-agent': 'Mozilla/5.0'
     }).content.decode()
-
+    print(data)
     # 2023/4/21 出現 {"code":-509,.....}{"code":0.....} 的情況
     if data[45:47] == "}{":
         data = data[46:]
@@ -77,7 +77,7 @@ def uid2face(uid):
         image = zlib.compress(image)
         return image
     else:
-        print(data['code'])
+        print(data)
         return None
 
 

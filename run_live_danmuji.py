@@ -1,9 +1,7 @@
 import sys
 import threading
 
-from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QApplication
-from PyQt5 import QtCore
 from utils.converter import *
 from live.danmuji_ctrl import Danmuji
 from live.socket import LiveSocket
@@ -15,21 +13,18 @@ class Main(LiveSocket):
         self.face = {}
         self.app = QApplication(sys.argv)
         self.danmuji = Danmuji()
-        threading.Thread(target=self.app.exec_)
-        self.start()
+        threading.Thread(target=self.start).start()
+        sys.exit(self.app.exec_())
 
     def on_danmu(self):
-        def function():
-            if self.msg['uid'] not in self.face:
-                self.face.update({
-                    self.msg['uid']: uid2face(self.msg['uid'])
-                })
-            self.danmuji.append_msg(f"""
-                    <img src="data:image/png;base64,{face_decompress(self.face[self.msg['uid']])}" width="50" height="50">{str(self.msg['msg'])}
-                """)
-            QApplication.processEvents()
-        threading.Thread(target=function).start()
+        if self.msg['uid'] not in self.face:
+            self.face.update({
+                self.msg['uid']: uid2face(self.msg['uid'])
+            })
+        self.danmuji.append_msg(f"""
+                <img src="data:image/png;base64,{face_decompress(self.face[self.msg['uid']])}" width="50" height="50">{str(self.msg['msg'])}
+            """)
 
 
 if __name__ == "__main__":
-    Main(room_id=13829253)
+    Main(room_id=359519)

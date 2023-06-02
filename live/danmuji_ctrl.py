@@ -1,6 +1,6 @@
 from random import randint
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
@@ -14,6 +14,8 @@ color_list = ["#ff0000", "#ff4d00", "#ff8400", "#ffae00", "#ffd500", "#c8ff00", 
 
 
 class Danmuji(QMainWindow):
+    msg_signal = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
@@ -27,6 +29,7 @@ class Danmuji(QMainWindow):
         self.textedit_cursor = self.textedit.textCursor()
         self.textedit_document = self.textedit.document()
         self.textedit.setAlignment(Qt.AlignBottom)
+        self.msg_signal.connect(self.append_msg)
         for i in range(20):
             self.textedit_cursor.insertBlock()
         self.textedit.ensureCursorVisible()

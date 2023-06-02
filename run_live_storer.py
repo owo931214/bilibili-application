@@ -29,8 +29,6 @@ class Main(LiveSocket):
         """)
         self.db_conn.commit()
 
-        self.start()
-
     def on_close(self, ws, *args):
         super().on_close(ws, *args)
         self.db_conn.close()
@@ -54,4 +52,5 @@ class Main(LiveSocket):
 
 
 if __name__ == "__main__":
-    Main(room_id=22320946)
+    main = Main(room_id=22320946)
+    main.start()

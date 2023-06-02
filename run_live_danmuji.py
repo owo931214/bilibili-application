@@ -14,18 +14,22 @@ class Main(LiveSocket):
         self.face = {}
         self.app = QApplication(sys.argv)
         self.danmuji = Danmuji()
-        threading.Thread(target=self.start).start()
-        sys.exit(self.app.exec_())
+        self.thread = threading.Thread(target=self.start)
 
     def on_danmu(self):
         if self.msg['uid'] not in self.face:
             self.face.update({
                 self.msg['uid']: uid2face(self.msg['uid'])
             })
-        self.danmuji.append_msg(f"""
+        self.danmuji.msg_signal.emit(f"""
                 <img src="data:image/png;base64,{face_decompress(self.face[self.msg['uid']])}" width="50" height="50">{str(self.msg['msg'])}
             """)
 
+    def run_danmuji(self):
+        self.thread.start()
+        sys.exit(self.app.exec_())
+
 
 if __name__ == "__main__":
-    Main(room_id=359519)
+    main = Main(room_id=22320946)
+    main.run_danmuji()

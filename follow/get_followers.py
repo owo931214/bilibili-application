@@ -1,11 +1,7 @@
-import json
 import sqlite3
-import time
 from datetime import datetime
 
-import requests
-
-import utils
+from utils.converter import *
 
 user_cookie = {
     "SESSDATA": "894cb883%2C1693378035%2C03451%2A31",
@@ -42,7 +38,7 @@ def check_followers_status():
             "uid": uid,
             "status": data['be_relation']['attribute'],
             "time": str(datetime.fromtimestamp(data['be_relation']['mtime'])),
-            "name": utils.uid2uname(uid)
+            "name": uid2uname(uid)
         }
         datas.append(tuple(follower_info.values()))
         time.sleep(0.05)

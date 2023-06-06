@@ -1,5 +1,3 @@
-import requests
-
 from utils.converter import *
 
 print(uid2roomid(1))
